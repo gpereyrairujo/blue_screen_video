@@ -5,6 +5,7 @@ import cv2
 
 # Folder containing background videos
 path = 'C:/Users/Gustavo/Desktop/videos/'
+output_path = 'C:/Users/Gustavo/Desktop/output/'
 
 cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
 cv2.setWindowProperty("window",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
@@ -26,8 +27,9 @@ while(True):
         
         # Define the video codec and open a file for saving the resulting video
         # frames per second (fps) are the same as the background video
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        out = cv2.VideoWriter('C:/Users/Gustavo/Desktop/output.avi',fourcc, fps, (640,360))
+        fourcc = cv2.VideoWriter_fourcc(*'H264') #MJPG')
+        timestr = time.strftime("-%Y%m%d-%H%M%S")
+        out = cv2.VideoWriter(output_path+'output'+timestr+'.mp4',fourcc, fps, (640,360))
         
         while(True):
             
@@ -90,10 +92,12 @@ while(True):
         # When everything done, release the captures
         cap.release()
         vid.release()
+        out.release()
+
         if k == ord('q'):
             break
+            
     if k == ord('q'):
         break
     
-out.release()
 cv2.destroyAllWindows()
