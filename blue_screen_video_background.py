@@ -1,18 +1,21 @@
 import numpy as np
 import os
+import sys
 import time
 import cv2
 
 # Folder containing background videos
-path = 'C:/Users/Gustavo/Desktop/videos/'
+input_path = 'C:/Users/Gustavo/Desktop/videos/'
 output_path = 'C:/Users/Gustavo/Desktop/output/'
 
-cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-cv2.setWindowProperty("window",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
+# Open a window in full screen mode
+cv2.namedWindow("Blue Screen", cv2.WND_PROP_FULLSCREEN)
+cv2.setWindowProperty("Blue Screen",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
 
 while(True):
 
-    for filename in os.listdir(path):
+    # Loop through all files in the input folder
+    for filename in os.listdir(input_path):
     
         # Start video capture from camera at 640x360 resolution
         cap = cv2.VideoCapture(0)
@@ -20,14 +23,15 @@ while(True):
         ret = cap.set(4,360)
         
         # Open video file for background (must be 640x360 resolution)
-        vid = cv2.VideoCapture(path+filename)
+        vid = cv2.VideoCapture(input_path+filename)
         frame_counter = 0
         fps = vid.get(cv2.CAP_PROP_FPS)
         ms=1
         
         # Define the video codec and open a file for saving the resulting video
         # frames per second (fps) are the same as the background video
-        fourcc = cv2.VideoWriter_fourcc(*'H264') #MJPG')
+        # File name is output+date+time.mp4
+        fourcc = cv2.VideoWriter_fourcc(*'H264')
         timestr = time.strftime("-%Y%m%d-%H%M%S")
         out = cv2.VideoWriter(output_path+'output'+timestr+'.mp4',fourcc, fps, (640,360))
         
@@ -58,7 +62,7 @@ while(True):
                 hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             
                 # define range of blue color in HSV
-                lower_blue = np.array([90,100,100])
+                lower_blue = np.array([90,100,50])
                 upper_blue = np.array([150,255,255])
             
                 # Threshold the HSV image to get only blue colors
@@ -69,35 +73,37 @@ while(True):
                 output_image[np.where(mask != 0)] = background[np.where(mask != 0)]
                 
                 # Display the resulting image
-                #cv2.putText(output_image, str(ms) ,(10,350), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2,cv2.LINE_AA)
-                cv2.imshow("window", output_image)
-                #cv2.imshow('input video', frame)
+                cv2.imshow("Blue Screen", output_image)
                 
                 # Save frame
                 out.write(output_image)
             
-                # Wait some milliseconds to match frame rate, and exit if 'q' key is pressed
+                # Wait some milliseconds to match frame rate
                 # If more time than required has elapsed, wait only 1 ms
                 elapsed = (time.time() - start)*1000
                 ms = max(int(1000./float(fps))-elapsed,1)
+                
+                # If space bar is pressed skip to next video
                 k = cv2.waitKey(1) & 0xFF 
                 if k == ord(' '):
                     break
+
+                # If Q key is pressed release capture/files, close window and exit
                 elif k == ord('q'):
-                    break
+                    cap.release()
+                    vid.release()
+                    out.release()
+                    cv2.destroyAllWindows()
+                    sys.exit(0)
                     
+            # Skip video if any of the images was not captured/loaded correctly
             else:
                 break
                 
-        # When everything done, release the captures
+        # When video has been skipped, release the capture/files
         cap.release()
         vid.release()
         out.release()
 
-        if k == ord('q'):
-            break
-            
-    if k == ord('q'):
-        break
-    
+# Close window
 cv2.destroyAllWindows()
